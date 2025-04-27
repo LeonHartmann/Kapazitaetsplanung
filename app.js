@@ -27,44 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let capacityChart = null;
     let completedChart = null;
 
-    // Initialize Flowbite modals
-    function initializeFlowbiteModals() {
-        try {
-            // Get all the modal elements
-            const modalIds = [
-                'employeeDetailsModal',
-                'plannedHoursModal',
-                'historicalHoursDetailsModal'
-            ];
-            
-            // Initialize each modal
-            modalIds.forEach(id => {
-                const modalElement = document.getElementById(id);
-                if (modalElement) {
-                    // Initialize the modal with Flowbite
-                    const modalOptions = {
-                        backdrop: 'dynamic',
-                        closable: true,
-                        onShow: () => console.log(`Modal ${id} shown`),
-                        onHide: () => console.log(`Modal ${id} hidden`)
-                    };
-                    
-                    try {
-                        // Create the modal instance
-                        const modal = new Modal(modalElement, modalOptions);
-                        console.log(`Modal ${id} initialized successfully`);
-                    } catch (e) {
-                        console.error(`Error initializing modal ${id}:`, e);
-                    }
-                } else {
-                    console.warn(`Modal element with ID '${id}' not found`);
-                }
-            });
-        } catch (error) {
-            console.error("Error initializing Flowbite modals:", error);
-        }
-    }
-
     // Define the mapping from Leistungsart_Kurzbezeichnung (Rechnungen) to Auftragsbezeichnung (Aufträge)
     const leistungsartMapping = {
         'Abschlußarb.': 'Abschluß',
@@ -150,6 +112,68 @@ document.addEventListener('DOMContentLoaded', function() {
             statusElement.classList.add('hidden');
         } else {
             statusElement.classList.remove('hidden');
+        }
+    }
+
+    // Function to display validation reports in the UI
+    function displayValidationReports(validationData) {
+        const { 
+            mitarbeiterNurInAuftraege = [], 
+            mitarbeiterNurInStunden = [], 
+            uniqueUnmapped = [], 
+            auftraegeMitNullStunden = [] 
+        } = validationData;
+        
+        const validationReportsContainer = document.getElementById('validationReports');
+        if (!validationReportsContainer) return;
+        
+        // Clear previous content
+        validationReportsContainer.innerHTML = '';
+        
+        // Build the validation report
+        const reports = [];
+        
+        // Add employee mismatches warning
+        if (mitarbeiterNurInAuftraege.length > 0 || mitarbeiterNurInStunden.length > 0) {
+            reports.push(`
+                <div class="p-4 mb-2 text-sm text-yellow-800 rounded-lg bg-yellow-50">
+                    <div class="font-medium mb-2">Mitarbeiter-Abgleich:</div>
+                    <ul class="list-disc pl-5">
+                        ${mitarbeiterNurInAuftraege.length > 0 ? 
+                            `<li>${mitarbeiterNurInAuftraege.length} Mitarbeiter nur in Aufträgen vorhanden</li>` : ''}
+                        ${mitarbeiterNurInStunden.length > 0 ? 
+                            `<li>${mitarbeiterNurInStunden.length} Mitarbeiter nur in Arbeitsstunden vorhanden</li>` : ''}
+                    </ul>
+                </div>
+            `);
+        }
+        
+        // Add unmapped Leistungsarten warning
+        if (uniqueUnmapped && uniqueUnmapped.length > 0) {
+            reports.push(`
+                <div class="p-4 mb-2 text-sm text-yellow-800 rounded-lg bg-yellow-50">
+                    <div class="font-medium mb-2">Nicht zugeordnete Leistungsarten:</div>
+                    <p>${uniqueUnmapped.length} Leistungsarten konnten keiner Auftragsbezeichnung zugeordnet werden.</p>
+                </div>
+            `);
+        }
+        
+        // Add orders with zero hours warning
+        if (auftraegeMitNullStunden && auftraegeMitNullStunden.length > 0) {
+            reports.push(`
+                <div class="p-4 mb-2 text-sm text-yellow-800 rounded-lg bg-yellow-50">
+                    <div class="font-medium mb-2">Aufträge ohne Stunden:</div>
+                    <p>${auftraegeMitNullStunden.length} Aufträge haben 0 Stunden (keine historischen Daten oder keine Initial-Stunden).</p>
+                </div>
+            `);
+        }
+        
+        // Add the reports to the container
+        if (reports.length > 0) {
+            validationReportsContainer.innerHTML = reports.join('');
+            validationReportsContainer.classList.remove('hidden');
+        } else {
+            validationReportsContainer.classList.add('hidden');
         }
     }
 
@@ -962,65 +986,45 @@ document.addEventListener('DOMContentLoaded', function() {
         return employeeCapacity;
     }
 
-    // Function to display validation reports in the UI
-    function displayValidationReports(validationData) {
-        const { 
-            mitarbeiterNurInAuftraege = [], 
-            mitarbeiterNurInStunden = [], 
-            uniqueUnmapped = [], 
-            auftraegeMitNullStunden = [] 
-        } = validationData;
-        
-        const validationReportsContainer = document.getElementById('validationReports');
-        if (!validationReportsContainer) return;
-        
-        // Clear previous content
-        validationReportsContainer.innerHTML = '';
-        
-        // Build the validation report
-        const reports = [];
-        
-        // Add employee mismatches warning
-        if (mitarbeiterNurInAuftraege.length > 0 || mitarbeiterNurInStunden.length > 0) {
-            reports.push(`
-                <div class="p-4 mb-2 text-sm text-yellow-800 rounded-lg bg-yellow-50">
-                    <div class="font-medium mb-2">Mitarbeiter-Abgleich:</div>
-                    <ul class="list-disc pl-5">
-                        ${mitarbeiterNurInAuftraege.length > 0 ? 
-                            `<li>${mitarbeiterNurInAuftraege.length} Mitarbeiter nur in Aufträgen vorhanden</li>` : ''}
-                        ${mitarbeiterNurInStunden.length > 0 ? 
-                            `<li>${mitarbeiterNurInStunden.length} Mitarbeiter nur in Arbeitsstunden vorhanden</li>` : ''}
-                    </ul>
-                </div>
-            `);
-        }
-        
-        // Add unmapped Leistungsarten warning
-        if (uniqueUnmapped && uniqueUnmapped.length > 0) {
-            reports.push(`
-                <div class="p-4 mb-2 text-sm text-yellow-800 rounded-lg bg-yellow-50">
-                    <div class="font-medium mb-2">Nicht zugeordnete Leistungsarten:</div>
-                    <p>${uniqueUnmapped.length} Leistungsarten konnten keiner Auftragsbezeichnung zugeordnet werden.</p>
-                </div>
-            `);
-        }
-        
-        // Add orders with zero hours warning
-        if (auftraegeMitNullStunden && auftraegeMitNullStunden.length > 0) {
-            reports.push(`
-                <div class="p-4 mb-2 text-sm text-yellow-800 rounded-lg bg-yellow-50">
-                    <div class="font-medium mb-2">Aufträge ohne Stunden:</div>
-                    <p>${auftraegeMitNullStunden.length} Aufträge haben 0 Stunden (keine historischen Daten oder keine Initial-Stunden).</p>
-                </div>
-            `);
-        }
-        
-        // Add the reports to the container
-        if (reports.length > 0) {
-            validationReportsContainer.innerHTML = reports.join('');
-            validationReportsContainer.classList.remove('hidden');
-        } else {
-            validationReportsContainer.classList.add('hidden');
+    // Initialize Flowbite modals
+    function initializeFlowbiteModals() {
+        try {
+            // Get all the modal elements
+            const modalIds = [
+                'employeeDetailsModal',
+                'plannedHoursModal',
+                'historicalHoursDetailsModal'
+            ];
+            
+            // Initialize each modal
+            modalIds.forEach(id => {
+                const modalElement = document.getElementById(id);
+                if (modalElement) {
+                    // Initialize the modal with Flowbite
+                    const modalOptions = {
+                        backdrop: 'dynamic',
+                        closable: true,
+                        onShow: () => console.log(`Modal ${id} shown`),
+                        onHide: () => console.log(`Modal ${id} hidden`)
+                    };
+                    
+                    try {
+                        // Create the modal instance
+                        const modal = new Modal(modalElement, modalOptions);
+                        console.log(`Modal ${id} initialized successfully`);
+                    } catch (e) {
+                        console.error(`Error initializing modal ${id}:`, e);
+                    }
+                } else {
+                    console.warn(`Modal element with ID '${id}' not found`);
+                }
+            });
+        } catch (error) {
+            console.error("Error initializing Flowbite modals:", error);
         }
     }
+
+    // Function to visualize results
+    function visualizeResults() {
+        // Implementation of visualizeResults function
 }); // End of DOMContentLoaded event listener
