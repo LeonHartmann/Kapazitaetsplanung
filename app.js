@@ -617,26 +617,29 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // --- Step 2: Group by employee, summing these directly assigned AllocatedPlanstunden ---
         const activeOrdersByEmployee = groupAndAggregate(activeOrdersWithAllocatedHours, 
-            ['MitarbeiterNummer', 'MitarbeiterName'], 
-            { 'AllocatedPlanstunden': sum, 'Auftrag': count }); // Sum the specific AllocatedPlanstunden
+            'MitarbeiterNummer', 
+            { sum: ['AllocatedPlanstunden'], count: ['Auftrag'] }); // Sum the specific AllocatedPlanstunden
         
         // Group completed orders - Sum PlanstundenBasis (specific historical hours)
         const completedOrdersByEmployee = groupAndAggregate(completedOrders, 
-            ['MitarbeiterNummer', 'MitarbeiterName'], 
-            { 'PlanstundenBasis': sum, 'Auftrag': count });
+            'MitarbeiterNummer', 
+            { sum: ['PlanstundenBasis'], count: ['Auftrag'] });
         
         const employeeCapacity = capacityData;
         
-        console.log('Generierte Berichte (activeOrdersByEmployee with allocated hours):', activeOrdersByEmployee.slice(0, 5));
-        console.log('Generierte Berichte (completedOrdersByEmployee):', completedOrdersByEmployee.slice(0, 5));
-        console.log('Generierte Berichte (employeeCapacity):', employeeCapacity.slice(0, 5));
-        console.log('Generierte Berichte (detailed active orders with allocated hours):', activeOrdersWithAllocatedHours.slice(0, 5)); // Log the new list
-        if (activeOrdersByEmployee.length === 0 && activeOrders.length > 0) {
+        console.log('Generierte Berichte (activeOrdersByEmployee with allocated hours):', activeOrdersByEmployee);
+        console.log('Generierte Berichte (completedOrdersByEmployee):', completedOrdersByEmployee);
+        console.log('Generierte Berichte (employeeCapacity):', employeeCapacity);
+        console.log('Generierte Berichte (detailed active orders with allocated hours):', activeOrdersWithAllocatedHours.slice(0, 5)); // Only apply slice to arrays
+        
+        // Check if the grouping worked
+        if (Object.keys(activeOrdersByEmployee).length === 0 && activeOrders.length > 0) {
              console.warn('WARNUNG: Aktive Aufträge vorhanden, aber Gruppierung fehlgeschlagen!');
         }
-         if (completedOrdersByEmployee.length === 0 && completedOrders.length > 0) {
+        if (Object.keys(completedOrdersByEmployee).length === 0 && completedOrders.length > 0) {
              console.warn('WARNUNG: Abgeschlossene Aufträge vorhanden, aber Gruppierung fehlgeschlagen!');
         }
+        
         return {
             activeOrdersByEmployee,
             completedOrdersByEmployee,
