@@ -1,0 +1,20 @@
+{
+  "name": "kapazitaetsplanung",
+  "version": "1.0.0",
+  "description": "Kapazitätsplanung Application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "planning",
+    "capacity",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+} 
