@@ -1027,4 +1027,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to visualize results
     function visualizeResults() {
         // Implementation of visualizeResults function
+    }
+
+    // Initialize the application
+    initializeApplication();
 }); // End of DOMContentLoaded event listener
