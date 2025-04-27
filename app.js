@@ -896,4 +896,69 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', () => modalInstance.hide());
         });
     }
+
+    // Function to calculate employee work capacity until a specified end date
+    function calculateCapacity(arbeitsstundenData, endDateStr) {
+        if (!arbeitsstundenData || !endDateStr) {
+            throw new Error('Fehlende Daten für die Kapazitätsberechnung');
+        }
+        
+        // Parse the end date
+        const dateParts = endDateStr.split('.');
+        if (dateParts.length !== 3) {
+            throw new Error('Ungültiges Datumsformat. Bitte TT.MM.JJJJ verwenden.');
+        }
+        
+        const endDate = new Date(
+            parseInt(dateParts[2]), // Year
+            parseInt(dateParts[1]) - 1, // Month (0-based)
+            parseInt(dateParts[0]) // Day
+        );
+        
+        if (isNaN(endDate.getTime())) {
+            throw new Error('Ungültiges Datum für die Kapazitätsberechnung');
+        }
+        
+        // Get current date
+        const today = new Date();
+        
+        // Calculate months difference (for planning horizon)
+        const monthsDiff = (endDate.getFullYear() - today.getFullYear()) * 12 + 
+                            (endDate.getMonth() - today.getMonth());
+        
+        if (monthsDiff < 0) {
+            throw new Error('Das Enddatum muss in der Zukunft liegen');
+        }
+        
+        // Process capacity data for each employee
+        const employeeCapacity = {};
+        
+        arbeitsstundenData.forEach(record => {
+            const mitarbeiterNr = record['Mitarbeiter Nummer'] ? record['Mitarbeiter Nummer'].toString().trim() : '';
+            const mitarbeiterName = record['Mitarbeiter Name'] ? record['Mitarbeiter Name'].toString().trim() : 'Unbekannt';
+            const wochenstunden = parseFloat(record['Wochenstunden'] ? record['Wochenstunden'].toString().replace(',', '.') : '0') || 0;
+            
+            if (!mitarbeiterNr) return; // Skip records without employee number
+            
+            // Calculate monthly hours (approximate: weeks per month * weekly hours)
+            const monthlyHours = (wochenstunden * 4.33); // 52 weeks / 12 months ≈ 4.33 weeks per month
+            
+            // Calculate total available capacity until end date
+            const availableCapacity = monthlyHours * (monthsDiff + 1); // Include current month
+            
+            employeeCapacity[mitarbeiterNr] = {
+                MitarbeiterNummer: mitarbeiterNr,
+                MitarbeiterName: mitarbeiterName,
+                Wochenstunden: wochenstunden,
+                MonatlicheStunden: monthlyHours,
+                'Verfügbare Kapazität': availableCapacity,
+                'Arbeitszeit in Stunden': availableCapacity, // Total work time (same as capacity before allocations)
+                'Geplante Stunden': 0, // This will be filled in by allocation logic later
+                'Auslastung (%)': 0,   // This will be calculated later
+                PlanungszeitraumMonate: monthsDiff + 1
+            };
+        });
+        
+        return employeeCapacity;
+    }
 }); // End of DOMContentLoaded event listener
