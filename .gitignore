@@ -1,0 +1,13 @@
+# CSV files
+*.csv
+
+# Directories
+OLD/
+node_modules/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

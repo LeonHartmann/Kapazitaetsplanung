@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kapazitätsplanung</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script> 
+    <!-- Flowbite CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+    <div class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">Kapazitätsplanung</h1>
+        
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-[100]">
+            <div class="text-center text-white">
+                <svg aria-hidden="true" class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                </svg>
+                <p class="mt-2 text-lg font-medium" id="loadingStatus">Verarbeite Daten...</p>
+            </div>
+        </div>
+        <!-- End Loading Overlay -->
+        
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500" id="myTab" data-tabs-toggle="#myTabContent" role="tablist">
+                <li class="me-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 rounded-t-lg text-blue-600 border-blue-600" id="planning-tab" data-tabs-target="#planning" type="button" role="tab" aria-controls="planning" aria-selected="true">Planung starten</button>
+                </li>
+                <li class="me-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 rounded-t-lg border-transparent hover:text-gray-600 hover:border-gray-300" id="capacity-tab" data-tabs-target="#capacity" type="button" role="tab" aria-controls="capacity" aria-selected="false">Mitarbeiterkapazität</button>
+                </li>
+                <li class="me-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 rounded-t-lg border-transparent hover:text-gray-600 hover:border-gray-300" id="active-tab" data-tabs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="false">Aktive Aufträge</button>
+                </li>
+                <li class="me-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 rounded-t-lg border-transparent hover:text-gray-600 hover:border-gray-300" id="completed-tab" data-tabs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="false">Abgeschlossene Aufträge</button>
+                </li>
+            </ul>
+        </div>
+        <div id="myTabContent">
+            <!-- Planung starten Tab -->
+            <div class="hidden p-4 rounded-lg bg-white" id="planning" role="tabpanel" aria-labelledby="planning-tab">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h5 class="text-xl font-semibold mb-4 text-gray-700">Einstellungen für die Kapazitätsplanung</h5>
+                    <form id="planningForm" class="space-y-4">
+                        <div>
+                            <label for="endDate" class="block mb-2 text-sm font-medium text-gray-900">Enddatum für die Planung:</label>
+                            <input type="text" id="endDate" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Enddatum auswählen">
+                        </div>
+                        
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900">Dateien hochladen</label>
+                            <div id="fileUploads" class="space-y-3">
+                                <div>
+                                    <label for="auftraegeFile" class="block mb-1 text-xs font-medium text-gray-700">Aufträge (.csv):</label>
+                                    <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" type="file" id="auftraegeFile" accept=".csv">
+                                </div>
+                                <div>
+                                    <label for="rechnungenFile" class="block mb-1 text-xs font-medium text-gray-700">Rechnungen (.csv):</label>
+                                    <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" type="file" id="rechnungenFile" accept=".csv">
+                                </div>
+                                <div>
+                                    <label for="arbeitsstundenFile" class="block mb-1 text-xs font-medium text-gray-700">Arbeitsstunden (.csv):</label>
+                                    <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" type="file" id="arbeitsstundenFile" accept=".csv">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900">Status:</label>
+                            <!-- Status message area -->
+                            <div id="status" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 hidden" role="alert">
+                                Bereit zum Start
+                            </div>
+                             <!-- Validation Reports Area -->
+                            <div id="validationReports" class="mb-4 hidden"> 
+                                <!-- Validation messages will be inserted here by JS -->
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="startPlanning" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">Kapazitätsplanung starten</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Mitarbeiterkapazität Tab -->
+            <div class="hidden p-4 rounded-lg bg-white" id="capacity" role="tabpanel" aria-labelledby="capacity-tab">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h5 class="text-xl font-semibold mb-4 text-gray-700">Mitarbeiterkapazität und Auslastung</h5>
+                    <div class="mb-4">
+                        <canvas id="capacityChart"></canvas>
+                    </div>
+                    <!-- Add Filter Input -->
+                    <div class="mb-4">
+                        <label for="capacityFilter" class="block mb-1 text-sm font-medium text-gray-700">Tabelle filtern (z.B. nach Mitarbeiter):</label>
+                        <input type="text" id="capacityFilter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Filter eingeben...">
+                    </div>
+                    <!-- End Filter Input -->
+                    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-500" id="capacityTable">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100" data-sort-key="MitarbeiterName">Mitarbeiter <i class="bi bi-arrow-down-up text-xs"></i></th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 text-right" data-sort-key="Arbeitszeit in Stunden">Arbeitszeit (Std) <i class="bi bi-arrow-down-up text-xs"></i></th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 text-right" data-sort-key="Verfügbare Kapazität">Verfügb. Kapazität (Std) <i class="bi bi-arrow-down-up text-xs"></i></th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 text-right" data-sort-key="Geplante Stunden">Geplante Stunden (Std) <i class="bi bi-arrow-down-up text-xs"></i></th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 text-right" data-sort-key="Auslastung (%)">Auslastung (%) <i class="bi bi-arrow-down-up text-xs"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- JS Populated: class="bg-white border-b hover:bg-gray-50" -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aktive Aufträge Tab -->
+            <div class="hidden p-4 rounded-lg bg-white" id="active" role="tabpanel" aria-labelledby="active-tab">
+                 <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h5 class="text-xl font-semibold mb-4 text-gray-700">Aktive Aufträge je Mitarbeiter</h5>
+                    <!-- Add Filter Input -->
+                    <div class="mb-4">
+                        <label for="activeOrdersFilter" class="block mb-1 text-sm font-medium text-gray-700">Tabelle filtern (z.B. nach Mitarbeiter):</label>
+                        <input type="text" id="activeOrdersFilter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Filter eingeben...">
+                    </div>
+                    <!-- End Filter Input -->
+                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-500" id="activeOrdersTable">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100" data-sort-key="MitarbeiterName">Mitarbeiter <i class="bi bi-arrow-down-up text-xs"></i></th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 text-right" data-sort-key="AllocatedPlanstunden">Summe Allok. Planstunden <i class="bi bi-arrow-down-up text-xs"></i></th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 text-right" data-sort-key="Auftrag">Anzahl Akt. Aufträge <i class="bi bi-arrow-down-up text-xs"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- JS Populated: class="bg-white border-b hover:bg-gray-50" -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Abgeschlossene Aufträge Tab -->
+            <div class="hidden p-4 rounded-lg bg-white" id="completed" role="tabpanel" aria-labelledby="completed-tab">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h5 class="text-xl font-semibold mb-4 text-gray-700">Abgeschlossene Aufträge je Mitarbeiter</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                             <canvas id="completedChart"></canvas>
+                        </div>
+                        <div>
+                            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                                <table class="w-full text-sm text-left rtl:text-right text-gray-500" id="completedOrdersTable">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3">Mitarbeiter</th>
+                                            <th scope="col" class="px-6 py-3">Summe Stunden</th>
+                                            <th scope="col" class="px-6 py-3">Anzahl Aufträge</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                         <!-- JS Populated: class="bg-white border-b" -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Employee Order Details Modal -->
+    <div id="employeeDetailsModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-4xl max-h-full">
+            <div class="relative bg-white rounded-lg shadow">
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
+                    <h3 class="text-xl font-semibold text-gray-900" id="employeeDetailsModalLabel">
+                        Auftragsdetails für: <span id="modalEmployeeName">Mitarbeiter Name</span>
+                    </h3>
+                    <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="employeeDetailsModal">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <div class="p-4 md:p-5 space-y-4">
+                    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-500" id="employeeDetailsTable">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Auftrag</th>
+                                    <th scope="col" class="px-6 py-3">Auftragsbezeichnung</th>
+                                    <th scope="col" class="px-6 py-3">Mandant</th>
+                                    <th scope="col" class="px-6 py-3">VJ</th>
+                                    <th scope="col" class="px-6 py-3">Kategorie</th>
+                                    <th scope="col" class="px-6 py-3">Allok. Planstunden</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeeDetailsTableBody">
+                                <!-- JS Populated: class="bg-white border-b" -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b">
+                    <button data-modal-hide="employeeDetailsModal" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Planned Hours Calculation Modal -->
+    <div id="plannedHoursModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-4xl max-h-full">
+            <div class="relative bg-white rounded-lg shadow">
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
+                    <h3 class="text-xl font-semibold text-gray-900" id="plannedHoursModalLabel">
+                        Berechnung der geplanten Stunden für: <span id="modalPlannedHoursEmployeeName">Mitarbeiter Name</span>
+                    </h3>
+                    <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="plannedHoursModal">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <div class="p-4 md:p-5 space-y-4">
+                    <div class="mb-3">
+                        <h6 class="text-lg font-semibold text-gray-800 mb-2">Basisberechnung:</h6>
+                        <ul class="max-w-md space-y-1 text-gray-500 list-disc list-inside">
+                            <li><strong>Arbeitszeit pro Woche:</strong> <span id="modalWeeklyHours" class="font-medium text-gray-900">0</span> Stunden</li>
+                            <li><strong>Verbleibende Arbeitstage bis Enddatum:</strong> <span id="modalWeeksRemaining" class="font-medium text-gray-900">0</span> Arbeitstage</li>
+                            <li><strong>Verfügbare Gesamtkapazität:</strong> <span id="modalTotalCapacity" class="font-medium text-gray-900">0</span> Stunden</li>
+                        </ul>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="text-lg font-semibold text-gray-800 mb-2">Aufträge und zugeordnete Stunden:</h6>
+                        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                            <table class="w-full text-sm text-left rtl:text-right text-gray-500" id="plannedHoursTable">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">Auftrag</th>
+                                        <th scope="col" class="px-6 py-3">Auftragsbezeichnung</th>
+                                        <th scope="col" class="px-6 py-3">Mandant</th>
+                                        <th scope="col" class="px-6 py-3">VJ</th>
+                                        <th scope="col" class="px-6 py-3">Kategorie</th>
+                                        <th scope="col" class="px-6 py-3">Historische Stunden</th>
+                                        <th scope="col" class="px-6 py-3">Allokierte Stunden</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="plannedHoursTableBody">
+                                     <!-- JS Populated: class="bg-white border-b hover:bg-gray-50" -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50" role="alert">
+                        <strong>Gesamte geplante Stunden:</strong> <span id="modalTotalPlannedHours" class="font-medium">0</span> Stunden
+                        <br>
+                        <strong>Auslastung:</strong> <span id="modalUtilization" class="font-medium">0</span>%
+                    </div>
+                </div>
+                 <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b">
+                    <button data-modal-hide="plannedHoursModal" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Hours Calculation Modal -->
+    <div id="historicalHoursDetailsModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-4xl max-h-full">
+            <div class="relative bg-white rounded-lg shadow">
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
+                    <h3 class="text-xl font-semibold text-gray-900" id="historicalHoursDetailsModalLabel">
+                         Berechnung der historischen Stunden
+                    </h3>
+                    <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="historicalHoursDetailsModal">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <div class="p-4 md:p-5 space-y-4">
+                     <h6 class="text-lg font-semibold text-gray-800 mb-2">Auftragsdetails:</h6>
+                     <ul class="text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg mb-3">
+                        <li class="w-full px-4 py-2 border-b border-gray-200"><strong>Auftrag:</strong> <span id="modalHistOrderAuftrag"></span></li>
+                        <li class="w-full px-4 py-2 border-b border-gray-200"><strong>Bezeichnung:</strong> <span id="modalHistOrderBezeichnung"></span></li>
+                        <li class="w-full px-4 py-2 rounded-b-lg"><strong>Mandant:</strong> <span id="modalHistOrderMandant"></span></li>
+                    </ul>
+
+                    <h6 class="text-md font-semibold text-gray-800">Berechnung basierend auf VJ: <span id="modalHistOrderVJ" class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">N/A</span></h6>
+                    
+                    <p class="text-sm text-gray-600">Die folgenden Rechnungsposten aus dem VJ <span id="modalHistOrderVJText" class="font-medium">N/A</span> wurden summiert:</p>
+                    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-500" id="historicalHoursDetailsTable">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Rechnungsnummer</th>
+                                    <th scope="col" class="px-6 py-3">Datum</th>
+                                    <th scope="col" class="px-6 py-3">Mitarbeiter</th>
+                                    <th scope="col" class="px-6 py-3">Leistungsart</th> 
+                                    <th scope="col" class="px-6 py-3">Std/Min</th>
+                                    <th scope="col" class="px-6 py-3">Betrag</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historicalHoursDetailsTableBody">
+                                <!-- JS Populated: class="bg-white border-b" -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
+                         <strong>Gesamte historische Stunden (PlanstundenBasis):</strong> <span id="modalHistOrderTotalHours" class="font-medium">0.00</span> Stunden
+                    </div>
+                </div>
+                 <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b">
+                    <button data-modal-hide="historicalHoursDetailsModal" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keep Chart.js, Papaparse, Flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
+    <!-- Flowbite JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+    <!-- Your App JS -->
+    <script src="app.js"></script>
+
+</body>
+</html> 
