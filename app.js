@@ -1068,6 +1068,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Implementation of visualizeResults function
     }
 
+    // Helper function to sum values
+    function sum(array, propertyName = null) {
+        if (!array || !Array.isArray(array)) return 0;
+        
+        if (propertyName) {
+            // Sum of a property across all objects in the array
+            return array.reduce((total, item) => {
+                const value = item[propertyName];
+                return total + (parseFloat(value) || 0);
+            }, 0);
+        } else {
+            // Sum of all numbers in the array
+            return array.reduce((total, value) => total + (parseFloat(value) || 0), 0);
+        }
+    }
+
     // Initialize the application
     initializeApplication();
 }); // End of DOMContentLoaded event listener
