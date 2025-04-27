@@ -112,6 +112,46 @@ document.addEventListener('DOMContentLoaded', function() {
         'Wirtsch. Berat.': null
     };
 
+    // Function to update status message 
+    function updateStatus(message, type = 'info', hideAlert = false) {
+        const statusElement = document.getElementById('status');
+        if (!statusElement) return;
+        
+        // Set the message
+        statusElement.textContent = message;
+        
+        // Remove all existing status classes
+        statusElement.classList.remove(
+            'text-blue-800', 'bg-blue-50',    // info
+            'text-green-800', 'bg-green-50',  // success
+            'text-red-800', 'bg-red-50',      // danger
+            'text-yellow-800', 'bg-yellow-50' // loading/warning
+        );
+        
+        // Add appropriate styling based on type
+        switch (type) {
+            case 'success':
+                statusElement.classList.add('text-green-800', 'bg-green-50');
+                break;
+            case 'danger':
+                statusElement.classList.add('text-red-800', 'bg-red-50');
+                break;
+            case 'loading':
+                statusElement.classList.add('text-yellow-800', 'bg-yellow-50');
+                break;
+            case 'info':
+            default:
+                statusElement.classList.add('text-blue-800', 'bg-blue-50');
+                break;
+        }
+        
+        // Show or hide the alert
+        if (hideAlert) {
+            statusElement.classList.add('hidden');
+        } else {
+            statusElement.classList.remove('hidden');
+        }
+    }
 
     // Function to start the planning process
     async function startPlanning() {
