@@ -557,6 +557,45 @@ document.addEventListener('DOMContentLoaded', function() {
         return null; 
     }
 
+    // Function to group and aggregate data
+    function groupAndAggregate(data, groupByKey, aggregationConfig) {
+        const grouped = {};
+        
+        // Group the data
+        data.forEach(item => {
+            const key = item[groupByKey];
+            if (!key) return; // Skip items without the key
+            
+            if (!grouped[key]) {
+                grouped[key] = {
+                    count: 0,
+                    items: [],
+                    sums: {}
+                };
+                
+                // Initialize sums for all configured metrics
+                if (aggregationConfig.sum) {
+                    aggregationConfig.sum.forEach(field => {
+                        grouped[key].sums[field] = 0;
+                    });
+                }
+            }
+            
+            grouped[key].count++;
+            grouped[key].items.push(item);
+            
+            // Sum up the configured metrics
+            if (aggregationConfig.sum) {
+                aggregationConfig.sum.forEach(field => {
+                    const value = parseFloat(item[field]) || 0;
+                    grouped[key].sums[field] += value;
+                });
+            }
+        });
+        
+        return grouped;
+    }
+
     // --- Adjust generateReports: AllocatedPlanstunden = PlanstundenBasis --- 
     function generateReports(linkedData, capacityData) {
         // Filter orders
