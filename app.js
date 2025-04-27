@@ -1084,6 +1084,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Helper function to count items
+    function count(array, filterFn = null) {
+        if (!array || !Array.isArray(array)) return 0;
+        
+        if (filterFn && typeof filterFn === 'function') {
+            // Count items that match the filter function
+            return array.filter(filterFn).length;
+        } else {
+            // Simply return the length of the array
+            return array.length;
+        }
+    }
+
+    // Function to initialize the application
+    function initializeApplication() {
+        // Initialize Flowbite modals
+        initializeFlowbiteModals();
+        
+        // Set up the start planning button
+        document.getElementById('startPlanning').addEventListener('click', startPlanning);
+        
+        // Set up any other event listeners or initialization needed
+        console.log('Application initialized successfully');
+    }
+
     // Initialize the application
     initializeApplication();
 }); // End of DOMContentLoaded event listener
